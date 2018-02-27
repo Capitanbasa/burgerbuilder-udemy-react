@@ -4,6 +4,9 @@ import Burger from '../../components/Burger/Burger';
 import BurgerControl from '../../components/Burger/BurgerControl/BurgerControl';
 import Modal from '../../components/UI/Modal/Modal';
 import OrderSummary from '../../components/Burger/OrderSummary/OrderSummary';
+import instanceOrder from '../../axios-order';
+import Spinner from '../../components/UI/Spinner/Spinner';
+import errorHandler from '../../hoc/ErrorHandler/ErrorHandler';
 
 const INGREDIENT_PRICES = {
     salad : 15.5,
@@ -19,15 +22,21 @@ class BurgerBuilder extends Component{
     //     }
     // }
     state = {
-        ingredients : {
-            salad : 0,
-            bacon : 0,
-            cheese : 0,
-            meat : 0
-        },
+        ingredients : null,
         totalPrice : 55,
         orderReady : false,
-        showModal : false
+        showModal : false,
+        loading : false,
+        error : false
+    }
+    componentDidMount(){
+        instanceOrder.get('https://fireba-burgerapp.firebaseio.com/ingredients.json')
+            .then(response => {
+                this.setState({ingredients : response.data});
+            })
+            .catch(error => {
+                this.setState({error : true});
+            });
     }
     updateOrderReady(ingredients){
         const sum = Object.keys(ingredients).map((iKeys) => {
@@ -75,8 +84,32 @@ class BurgerBuilder extends Component{
         this.setState({showModal : false});
     }
     checkoutHandler = () => {
-        alert('You Successfully Purchase a Burger');
-        return false;
+        this.setState({loading : true});
+        const order = {
+            ingredients : this.state.ingredients,
+            price : this.state.totalPrice,
+            customer : {
+                name : 'Hercival Aragon',
+                address : {
+                    lot : 22,
+                    block : 16,
+                    phase : 2,
+                    subdivision : 'San Isdro Heights',
+                    brgy : 'San Isidro',
+                    municipal : 'Cabuyao',
+                    prov : 'Laguna',
+                    zip : 4025
+                },
+                email : 'hercivalaragon@gmail.com',
+                deliveryMethod : 'fastest'
+            }
+
+        }
+        instanceOrder.post('./orders.json', order).then(response => {
+            this.setState({loading : false, showModal : false});
+        }).catch(error => {
+            this.setState({loading : false,  showModal : false});
+        });
     }
 
     render(){
@@ -89,9 +122,14 @@ class BurgerBuilder extends Component{
         if(this.state.showModal) {
             
         }
-        return(
-            <Aux>
-                <Burger ingredients={this.state.ingredients}/>
+        let orderSummary = null ;
+        if(this.state.loading){
+            orderSummary = <Spinner />;
+        }
+        let burger = this.state.error ? <center><p>Cant Load the Ingredients! </p></center>:<Spinner /> ;
+        if(this.state.ingredients){
+            
+            burger = (<Aux><Burger ingredients={this.state.ingredients}/>
                 <BurgerControl 
                     ingredientAdd = {this.addIngredientHandler}
                     ingredientRemove = {this.removeIngredientHandler}
@@ -99,17 +137,24 @@ class BurgerBuilder extends Component{
                     price = {this.state.totalPrice}
                     orderready = {this.state.orderReady}
                     showModalClick = {this.showModalhandler}
-                />
-                <Modal show = {this.state.showModal} backdrophide = {this.hideModalHandler}>
-                    <OrderSummary 
-                        ingredients = {this.state.ingredients}
-                        totalprice = {this.state.totalPrice.toFixed(2)}
-                        checkout = {this.checkoutHandler}
-                        cancelevent={this.hideModalHandler}/>
-                </Modal>
+                /></Aux>);
+            orderSummary = <OrderSummary 
+                ingredients = {this.state.ingredients}
+                totalprice = {this.state.totalPrice.toFixed(2)}
+                checkout = {this.checkoutHandler}
+                cancelevent={this.hideModalHandler}/> ;
+        }
+        return(
+            <Aux>
                 
+                
+                
+                <Modal show = {this.state.showModal} backdrophide = {this.hideModalHandler}>
+                    { orderSummary }
+                </Modal>
+                { burger }
             </Aux>
         );
     }
 }
-export default BurgerBuilder;
+export default errorHandler(BurgerBuilder, instanceOrder);
