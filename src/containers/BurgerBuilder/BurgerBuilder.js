@@ -84,31 +84,17 @@ class BurgerBuilder extends Component{
         this.setState({showModal : false});
     }
     checkoutHandler = () => {
-        this.setState({loading : true});
-        const order = {
-            ingredients : this.state.ingredients,
-            price : this.state.totalPrice,
-            customer : {
-                name : 'Hercival Aragon',
-                address : {
-                    lot : 22,
-                    block : 16,
-                    phase : 2,
-                    subdivision : 'San Isdro Heights',
-                    brgy : 'San Isidro',
-                    municipal : 'Cabuyao',
-                    prov : 'Laguna',
-                    zip : 4025
-                },
-                email : 'hercivalaragon@gmail.com',
-                deliveryMethod : 'fastest'
-            }
+ 
+        const queryParams = [];
 
+        for(let i in this.state.ingredients){
+            queryParams.push(encodeURIComponent(i) + '=' + encodeURIComponent(this.state.ingredients[i]));
         }
-        instanceOrder.post('./orders.json', order).then(response => {
-            this.setState({loading : false, showModal : false});
-        }).catch(error => {
-            this.setState({loading : false,  showModal : false});
+        queryParams.push('price=' + this.state.totalPrice);
+        const queryString = queryParams.join('&');
+        this.props.history.push({
+            pathname : '/checkout',
+            search : '?'+queryString
         });
     }
 
