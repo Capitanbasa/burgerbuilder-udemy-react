@@ -3,8 +3,9 @@ import React, {Component} from 'react';
 import Button from '../../../components/UI/Button/Button';
 import classes from './ContactData.css';
 import Spinner from '../../../components/UI/Spinner/Spinner';
-import instanceOrder from '../../../axios-order';
+import axios from '../../../axios-order';
 import Input from '../../../components/UI/Input/Input';
+import { connect } from 'react-redux';
 
 class ContactData extends Component{
     state = {
@@ -128,12 +129,12 @@ class ContactData extends Component{
             formData[key] = this.state.orderForm[key].value
         }
         const order = {
-            ingredients : this.props.ingredients,
-            price : this.props.totalprice,
+            ingredients : this.props.ings,
+            price : this.props.tprice,
             orderData : formData
 
         }
-        instanceOrder.post('./orders.json', order).then(response => {
+        axios.post('./orders.json', order).then(response => {
             this.setState({loading : false });
             this.props.history.push('/');
         }).catch(error => {
@@ -200,6 +201,11 @@ class ContactData extends Component{
         );
     }
 }
-
+const mapStateToProps = state => {
+    return {
+        ings : state.ingredients,
+        tprice : state.totalPrice
+    }
+}
 //export default withRouter(ContactData);
-export default ContactData;
+export default connect(mapStateToProps)(ContactData);
