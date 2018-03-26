@@ -3,9 +3,9 @@ import BurgerControlClass from './BurgerControl.css';
 import ControlElement from './ControlElement/ControlElement';
 const controls = [
     {label : 'Salad', type : 'salad'},
-    {label : 'Meat', type : 'meat'},
     {label : 'Chesse', type : 'cheese'},
-    {label : 'Bacon', type : 'bacon'}
+    {label : 'Bacon', type : 'bacon'},
+    {label : 'Meat', type : 'meat'}
 ]
 const BurgerControl = (props) => (
     <div className={BurgerControlClass.BuildControls}>
